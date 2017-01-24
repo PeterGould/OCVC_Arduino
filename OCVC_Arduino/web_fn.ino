@@ -1,3 +1,5 @@
+#include <Arduino.h>
+
 //starting home page
 void main_page(){
   String message = "<HTML><HEAD><TITLE>Olympia Circuits</TITLE></HEAD>\n"
@@ -8,7 +10,7 @@ void main_page(){
                     "<br>"
                      "<iframe src='http://www.olycirc.com/show_status' width='90%' height='70%' name='statusBox' id = 'statusBox'>\n"
                       "</iframe><BR></HTML>\n";
-  webServer.send(200, "text/html", message);                     
+  webServer.send(200, "text/html", message);
 }
 
 
@@ -17,7 +19,7 @@ void control(){
   String message = "<input type=\"button\" value=\"Launch\" onclick=\"top.frames['statusBox'].location.href='/launch_run'\">&nbsp&nbsp"
                     "<input type=\"button\" value=\"Stop\" onclick=\"top.frames['statusBox'].location.href='/stop_run'\">&nbsp&nbsp"
                     "<input type=\"button\" value=\"Manual\" onclick=\"top.frames['statusBox'].location.href='/manual'\">";
-  webServer.send(200, "text/html", message);  
+  webServer.send(200, "text/html", message);
 }
 
 
@@ -27,8 +29,9 @@ void control(){
 ///////////////////////////////////////////////////////////////////////
 void set_up(){
    String message = "<input type=\"button\" value=\"Valves\" onclick=\"window.location.href='/set_up/set_up_valves'\">&nbsp&nbsp"
+   "<input type=\"button\" value=\"Vacuum\" onclick=\"window.location.href='/set_up/set_up_vacuum'\">&nbsp&nbsp"
    "<input type=\"button\" value=\"Sync Clock\" onclick=\"window.location.href='/set_up/set_up_clock'\">&nbsp&nbsp";
-   webServer.send(200, "text/html", message);  
+   webServer.send(200, "text/html", message);
 }
 
 void set_up_clock(){
@@ -49,26 +52,31 @@ void set_up_clock(){
                     "window.location = '/set_up/show_clock';"
                     "}"
                     "}\n"
-                    "var full_url = 'http://www.olycirc.com/web_parser?f_type = 1&y=' + yr + '&mo=' + mnth + '&d=' + dy + '&h=' + hr + '&m=' + mins + '&s=' + secs;\n"     
-                   "xmlHttp.open('GET', full_url, true);\n" 
+                    "var full_url = 'http://www.olycirc.com/web_parser?f_type = 1&y=' + yr + '&mo=' + mnth + '&d=' + dy + '&h=' + hr + '&m=' + mins + '&s=' + secs;\n"
+                   "xmlHttp.open('GET', full_url, true);\n"
                    "xmlHttp.send();\n"
                     "</script>\n";
-  webServer.send(200,"text/html",message);                                    
+  webServer.send(200,"text/html",message);
 }
 
 void show_clock(){
-  
+   float battery_voltage;
+   battery_voltage = float(analogRead(A0))/1023.0f*100.0f*0.1493f;
    String message ="<HTML><HEAD> <meta http-equiv='refresh' content='1'> </head><BODY>"
-   "Device time: " + ocvc.getTimeString() + 
+   "Device time: " + ocvc.getTimeString() + "<br>" +
+   "Battery Voltage: " + battery_voltage +
    "</BODY></HTML>";
-   webServer.send(200,"text/html",message); 
+   webServer.send(200,"text/html",message);
 }
 
 //////////////////////////////////////////////////////
 //Menu and functions for setting valve durations
 ////////////////////////////////////////////////////
 void set_up_valves(){
-  String message = 
+  String message =
+  "<form action='/set_config'>"
+  "<input type='submit' style='width:150px; height:50px; font-size: 16px;' value='Save Settings'>"
+  "</form>"
   "<strong><p>Set Initial Delay</p>"
   "<form action='/web_parser?f_type=2'>"
   "<input type='hidden' name='f_type' value='2'>"
@@ -89,16 +97,16 @@ void set_up_valves(){
   "&nbsp&nbspValve</strong>&nbsp&nbsp"
   "<select name='valve'>"
   "<option value='0'>All</option>";
-  
+
   //loop for 8 valves;
   for(int k = 1;k<9;k++){
     String add1 = "<option value='" + String(k) + "'>" + String(k) + "</option>";
     message = message + add1;
   }
-  message = message + 
+  message = message +
             "</select>";
 //duration options
-  message = message + 
+  message = message +
   "<strong>&nbsp&nbspDuration</strong>&nbsp&nbsp"
   "<select name='duration'>"
   "<option value='0'>Off</option>"
@@ -114,8 +122,26 @@ void set_up_valves(){
   "<input type='submit' value='Submit'>"
   "</form>"
   "<iframe src = 'http://www.olycirc.com/show_valve_status' width = '100%' height = '80%' id = 'valveBox2'> </iframe><br>";;
-  webServer.send(200,"text/html",message); 
+  webServer.send(200,"text/html",message);
 }
+
+
+//////////////////////////////////////////////////////
+//run vacuum pump
+////////////////////////////////////////////////////
+void set_up_vacuum(){
+  String message =
+  "<form action='/web_parser?f_type=4'>"
+  "<input type='hidden' name='f_type' value='4'>"
+  "Level"
+  "<input type='range' name='vacuum' min='0' max='1023'>"
+  "<input type='submit'>"
+  "&nbsp&nbsp"
+  "</form>";
+  webServer.send(200,"text/html",message);
+}
+
+
 
 /////////////////////////////////////////////////////////////////////////////
 //status block
@@ -126,7 +152,7 @@ void show_status(){
   String message =  "<iframe src='http://www.olycirc.com/set_up/show_clock' width='100%' height='10%' name='clockBox' id = 'clockBox'> </iframe><br>"
                     "<iframe src = 'http://www.olycirc.com/show_run_status' width = '100%' height = '10%' id = 'runBox'> </iframe><br>"
                     "<iframe src = 'http://www.olycirc.com/show_valve_status' width = '100%' height = '80%' id = 'valveBox'> </iframe><br>";
-  webServer.send(200, "text/html", message);  
+  webServer.send(200, "text/html", message);
 }
 
 ////////////////////////////////////////////////
@@ -140,7 +166,7 @@ void show_run_status(){
   }
 
   message = "<HTML><HEAD> <meta http-equiv='refresh' content='5'> </head><BODY>" + message + "</BODY></HTML>";
-  webServer.send(200,"text/html",message); 
+  webServer.send(200,"text/html",message);
 }
 
 //helper functions
@@ -174,6 +200,9 @@ String process_run_status(){
 ////////////////////////////////////////////////
 void show_valve_status(){
   String message = "";
+  if(run_status != 1){
+    message+= "<strong>Delay:</strong>" + String(start_delay) + "<br>";
+  }
   for(int k = 0;k< 8; k++){
     String new_message = "<strong>Valve ";
     new_message = new_message + String(k+1) + "</strong>";
@@ -181,6 +210,5 @@ void show_valve_status(){
     new_message = new_message + " Duration " + String(valve_array[k].duration);
     message = message + new_message + "<br>";
   }
-  webServer.send(200,"text/html",message); 
+  webServer.send(200,"text/html",message);
 }
-
