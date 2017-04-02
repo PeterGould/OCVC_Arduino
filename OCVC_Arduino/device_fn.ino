@@ -28,6 +28,13 @@ void web_parser() {
       //set vacuum Level
       analogWrite(VACUUM_PIN,web_buffer[0]);
       break;
+    case 5:
+    //manual valve control
+    //first turn off all Valves
+      switch_valve(0,0);
+      //if k = 0 then just turn off end exit
+      if(web_buffer[0] > 0) switch_valve(web_buffer[0],2);
+      break;
     default:
       // if nothing else matches, do the default
       // default is optional

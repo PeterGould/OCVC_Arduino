@@ -76,8 +76,8 @@ void setup() {
   webServer.on("/set_up/set_up_clock",set_up_clock);
   webServer.on("/set_up/show_clock",show_clock);
   //control functions
-   webServer.on("/launch_run",launch_run);
-
+  webServer.on("/launch_run",launch_run);
+  webServer.on("/manual",manual_valve_settings);
   webServer.begin();
 }
 

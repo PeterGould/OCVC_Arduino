@@ -2,7 +2,9 @@
 
 //starting home page
 void main_page(){
-  String message = "<HTML><HEAD><TITLE>Olympia Circuits</TITLE></HEAD>\n"
+  String message = "<HTML><HEAD>"
+                    "<meta name='viewport' content='width=device-width, initial-scale=1.0'>"
+                    "<TITLE>Olympia Circuits</TITLE></HEAD>\n"
                     "<strong> Valve Controller Version 0.1</strong><br> Olympia Circuits peter@olympiacircuits.com <br><br>"
                     "<input type=\"button\" value=\"Status\" onclick=\"top.frames['statusBox'].location.href='/show_status'\">&nbsp&nbsp"
                     "<input type=\"button\" value=\"Control\" onclick=\"top.frames['statusBox'].location.href='/control'\">&nbsp&nbsp"
@@ -210,5 +212,21 @@ void show_valve_status(){
     new_message = new_message + " Duration " + String(valve_array[k].duration);
     message = message + new_message + "<br>";
   }
+  webServer.send(200,"text/html",message);
+}
+
+
+void manual_valve_settings(){
+  String message = "<form name='manual_valve' method='get' action='/web_parser?f_type=5'>";
+  message = message + "<input type='hidden' name='f_type' value='5'>";
+  for(int k = 0; k <= NUM_VALVES;k++){
+      message = message + "<input type='radio' name='manual_valve' value='" + String(k) + "'onclick='this.form.submit();'>";
+    if(k==0){
+      message = message + "All Off<br>";
+    }else{
+      message = message + "Valve " + String(k) + "<br>";
+    }
+  }
+  message = message + "</form>";
   webServer.send(200,"text/html",message);
 }
